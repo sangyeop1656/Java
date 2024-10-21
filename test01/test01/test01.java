@@ -67,8 +67,10 @@ public class test01 extends JFrame {
 
 	public static void main(String[] args) {
 	    new test01(); //GUI05 클래스의 새로운 인스턴스를 생성하여 GUI를 실행시키게 했습니다
+	    System.out.println("test");
 
 	}
+	
 
 }
 
