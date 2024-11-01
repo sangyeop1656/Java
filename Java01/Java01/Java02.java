@@ -16,11 +16,14 @@ import javax.swing.SwingConstants;
  * Java02 클래스는 간단한 계산기 GUI 애플리케이션을 구현합니다.
  * 이 클래스는 JFrame을 상속받아 계산기 UI를 구성하고,
  * 버튼 클릭 이벤트를 처리하여 기본적인 산술 연산을 수행합니다.
+ * @see https://help.gnome.org/users/gnome-calculator/stable/power.html.ko 여기서 제곱이랑 루트를 가지고 왔습니다.
+ * @see  ChatJPT를 활용해 Javadoc을 만들었습니다.
  */
 public class Java02 extends JFrame {
 
     JButton[] buttons = new JButton[24]; // 계산기 버튼들을 저장할 JButton 객체 배열입니다.
     JLabel display; // 계산 결과를 표시할 JLabel입니다.
+    JLabel inputDisplay; // 입력된 값을 표시할 JLabel
     String operator = ""; // 현재 연산자를 저장합니다.
     double currentResult = 0; // 누적된 결과값 저장합니다.
     boolean isDecimalUsed = false; // 소수점 사용 여부 확인
@@ -41,8 +44,19 @@ public class Java02 extends JFrame {
         display.setOpaque(true); // JLabel을 불투명하게 설정해서 배경색이 제대로 보이도록 설정합니다.
         display.setBackground(Color.white);
         display.setPreferredSize(new java.awt.Dimension(500, 100));
-        add(panel, BorderLayout.CENTER);
-        add(display, BorderLayout.NORTH);
+        
+        inputDisplay = new JLabel("", SwingConstants.RIGHT); // 입력된 값을 표시
+        inputDisplay.setFont(new Font("Arial", Font.PLAIN, 24));
+        inputDisplay.setPreferredSize(new java.awt.Dimension(500, 50));
+        
+        
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BorderLayout());
+        mainPanel.add(inputDisplay, BorderLayout.NORTH); // 입력값 표시 위로 이동
+        mainPanel.add(display, BorderLayout.CENTER); // 결과 표시
+        
+        add(mainPanel, BorderLayout.NORTH); // 메인 패널을 상단에 추가
+        add(panel, BorderLayout.CENTER);  
         panel.setLayout(new GridLayout(6, 4, 3, 3));
 
         Color buttonColor = Color.WHITE;
@@ -76,11 +90,13 @@ public class Java02 extends JFrame {
     /**
      * 버튼 클릭 시 수행되는 메서드입니다.
      * @param command 클릭된 버튼의 명령어
+     * @see https://doompok.tistory.com/7 Math.pow()제곱 함수랑, Math.sqrt() 제곱근 함수를 보고 활용했습니다
      */
     private void handleButtonPress(String command) {
         switch (command) { // 버튼의 명령어에 따라 분기
             case "CE":
                 display.setText("0"); // 디스플레이를 0으로 초기화합니다.
+                inputDisplay.setText(""); // 입력값 초기화
                 break;
             case "C":
                 resetCalculator(); // 계산기를 초기화하는 메서드를 호출합니다.
@@ -89,8 +105,10 @@ public class Java02 extends JFrame {
                 String currentText = display.getText(); // 현재 디스플레이 텍스트 가져옵니다.
                 if (currentText.length() > 1) {
                     display.setText(currentText.substring(0, currentText.length() - 1)); // 마지막 글자를 제거합니다
+                    inputDisplay.setText(inputDisplay.getText().substring(0, inputDisplay.getText().length() - 1)); // 입력값 제거
                 } else {
                     display.setText("0"); // 한 자리가 남았을 때 누르면 0으로 초기화합니다.
+                    inputDisplay.setText("");
                 }
                 break;
             case "=":
@@ -104,6 +122,7 @@ public class Java02 extends JFrame {
                     }
                     currentResult = calculate(currentResult, secondNum, operator); // 계산을 수행합니다.
                     display.setText(formatResult(currentResult)); // 결과를 디스플레이에 표시합니다.
+                    inputDisplay.setText(inputDisplay.getText() + " = " + formatResult(currentResult));
                     operator = ""; // 연산자를 초기화합니다.
                     isDecimalUsed = false; // 소수점 사용 여부 초기화합니다.
                     isOperatorUsed = false; // 연산자 눌림 상태 초기화합니다.
@@ -121,6 +140,7 @@ public class Java02 extends JFrame {
                     }
                     operator = command.equals("x") ? "*" : command;  // 연산자 설정 (x는 *로 변환)
                     display.setText(formatResult(currentResult)); // 결과를 표시합니다.
+                    inputDisplay.setText(formatResult(currentResult) + " " + operator + " ");
                     isOperatorUsed = true; // 연산자 눌림 상태 설정합니다.
                     isDecimalUsed = false; // 소수점 사용 여부 초기화합니다.
                 }
@@ -129,23 +149,27 @@ public class Java02 extends JFrame {
                 double baseNum = Double.parseDouble(display.getText()); // 현재 숫자를 가져옵니다.
                 currentResult = Math.pow(baseNum, 2); // 제곱 계산
                 display.setText(formatResult(currentResult)); // 결과를 디스플레이에 표시합니다.
+                inputDisplay.setText(baseNum + "² = " + formatResult(currentResult)); // 수식 표시
                 isOperatorUsed = false; // 연산자 눌림 상태 초기화합니다.
                 break;
             case "%":
                 double num = Double.parseDouble(display.getText()); 
                 currentResult = currentResult + (currentResult * (num / 100)); // 현재 결과의 퍼센트 계산 후 더하기
                 display.setText(formatResult(currentResult)); // 결과 표시합니다.
+                inputDisplay.setText(inputDisplay.getText() + " % " + formatResult(currentResult)); // 수식 표시
                 operator = ""; // 연산자 초기화합니다.
                 isDecimalUsed = false; // 소수점 사용 여부를 초기화합니다.
                 break;
             case "²√x":  
                 num = Double.parseDouble(display.getText()); // 현재 숫자를 가져옵니다.
                 display.setText(formatResult(Math.sqrt(num))); // 결과를 디스플레이에 표시합니다.
+                inputDisplay.setText("√" + num + " = " + formatResult(Math.sqrt(num))); // 수식 표시
                 isDecimalUsed = false; // 소수점 사용 여부 초기화합니다.
                 break;
             case "1/x": 
                 num = Double.parseDouble(display.getText()); // 현재 숫자를 가져옵니다.
                 display.setText(formatResult(1 / num)); // 결과를 디스플레이에 표시합니다.
+                inputDisplay.setText("1/" + num + " = " + formatResult(1 / num)); // 수식 표시
                 isDecimalUsed = false; // 소수점 사용 여부 초기화합니다.
                 break;
             case "+/-": 
@@ -155,17 +179,21 @@ public class Java02 extends JFrame {
             case ".": 
                 if (!isDecimalUsed) {  // 소수점이 사용되지 않았을 경우입니다.
                     display.setText(display.getText() + "."); // 현재 숫자에 소수점을 추가합니다.
+                    inputDisplay.setText(inputDisplay.getText() + "."); // 입력값에 소수점 추가
                     isDecimalUsed = true; // 소수점 사용 여부를 설정합니다.
                 }
                 break;
             default: // 숫자 입력 처리
                 if (isOperatorUsed) { 
                     display.setText(command); // 연산자 후 첫 숫자 입력합니다.
+                    inputDisplay.setText(inputDisplay.getText() + command);
                     isOperatorUsed = false;   // 연산자 눌림 상태 초기화합니다.
                 } else if (display.getText().equals("0")) {
                     display.setText(command); // 0이 있을 때 숫자를 입력합니다.
+                    inputDisplay.setText(command); // 입력값 업데이트
                 } else {
                     display.setText(display.getText() + command); // 기존 숫자에 추가합니다.
+                    inputDisplay.setText(inputDisplay.getText() + command); // 입력값 업데이트
                 } 
                 break;
         }
@@ -214,6 +242,7 @@ public class Java02 extends JFrame {
      */
     private void resetCalculator() {
         display.setText("0"); // 디스플레이를 "0"으로 초기화합니다.
+        inputDisplay.setText(""); // 입력값 초기화
         currentResult = 0; // 누적 결과 초기화합니다.
         isDecimalUsed = false; // 소수점 사용 여부 초기화합니다.
         operator = "";  // 연산자 초기화합니다.
